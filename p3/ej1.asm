@@ -1,4 +1,6 @@
 global SumaVectores
+global ComparacionGT
+global ComparacionEQ
 
 %define sizeB_mmx, 16
 
@@ -41,6 +43,30 @@ SumaVectores:
 	.fin:
 		ret
 			
+			
+;void ComparacionGT(char *vectorA, char *vectorB, int dimension )
+ComparacionGT:
+;rdi = puntero a vectorA
+;rsi = puntero a vectorB
+;rdx = cantidad de elementos de los vectores
+	movq xmm0, [rdi]
+	movq xmm1, [rsi]
+	pcmpgtb xmm0, xmm1
+	movq [rdi], xmm0
+	ret
+	
+;void ComparacionGT(char *vectorA, char *vectorB, int dimension )
+ComparacionEQ:
+;rdi = puntero a vectorA
+;rsi = puntero a vectorB
+;rdx = cantidad de elementos de los vectores
+	movq xmm0, [rdi]
+	movq xmm1, [rsi]
+	pcmpeqb xmm0, xmm1
+	movq [rdi], xmm0
+	ret
+	
+
 			
 			
 			
