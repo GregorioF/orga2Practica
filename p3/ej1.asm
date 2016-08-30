@@ -1,6 +1,8 @@
 global SumaVectores
 global ComparacionGT
 global ComparacionEQ
+global ShiftWordRight
+global MultiplicarVectorPorPotenciaDeDos
 
 %define sizeB_mmx, 16
 
@@ -49,10 +51,14 @@ ComparacionGT:
 ;rdi = puntero a vectorA
 ;rsi = puntero a vectorB
 ;rdx = cantidad de elementos de los vectores
-	movq xmm0, [rdi]
-	movq xmm1, [rsi]
-	pcmpgtb xmm0, xmm1
-	movq [rdi], xmm0
+
+;=============TENER EN CUENTA QUE MIS TEST EN ASEEMBLER DE ESTA FUNCION SON JUSTAMENTE CON LOS TAMAÑOS ADECUADOS
+;=============SIMPLEMENTE SON PARA VER COMO ANDAN ESTAS INSTRUCCIONES
+
+	movq xmm0, [rdi]		;pongo el vectorA en xmm0
+	movq xmm1, [rsi]		;pongo el vectorB en xmm0
+	pcmpgtb xmm0, xmm1		; ejecuto la comparacion "greater than"
+	movq [rdi], xmm0		;sobre escribo el vector a con el resultado y vulvo
 	ret
 	
 ;void ComparacionGT(char *vectorA, char *vectorB, int dimension )
@@ -66,7 +72,42 @@ ComparacionEQ:
 	movq [rdi], xmm0
 	ret
 	
+;void ShiftWordRight (uint16_t* vectorA, uint16_t* vectorB, int dimension)
+ShiftWordRight:
+;rdi = puntero a vectorA
+;rsi = dimension del arreglo
+	movdqu xmm0, [rdi]			; muevo el vectorA a xmm0, 
+	psrlw xmm0, 1				; le digo que corra los bites de cada packete un bite a la derecha
+	movdqu [rdi], xmm0			; devuelvo el shifeto
+	ret
 
+;void MultiplicarVectorPorPotenciaDeDos(int *vectorA, int potencia, int dimension)
+MultiplicarVectorPorPotenciaDeDos:
+;rdi = puntero a vectorA
+;rsi = potencia de dos a la que elevo
+;rdx = cantidad de enteros del vector
+	.ciclo:
+		cmp rdx, 4				; comparo la cantidad que me qda por shiftear con el tamaño del xmm0
+		jl .shiftManual			; si es menor a 4 me salto al modo manual
+		
+		.shiftEmpaquetado:
+			movdqu xmm0, [rdi]	; meuvo 4 numero int al xmm0
+			pslld xmm0, 2		; shifteo
+			movdqu [rdi], xmm0	; los reescribo
+			sub rdx, 4			; actualizo la cantidad que me falta
+			jmp .ciclo			; vuelvo al ciclo
+	
+	.shiftManual:					; si entre aca es porque la cantidad que me falta es < 4
+		cmp rdx, 0					; si termine de recorrer me voy
+		je .fin
+		
+		movd xmm0, [rdi]			; si no termine meuvo un solo numero a xmm0
+		pslld xmm0, 2			; lo shifteo
+		sub rdx, 1					; actualizo los que me faltan
+		jmp .shiftManual			; vuelvo a fijarme
+	
+	.fin:
+		ret
 			
 			
 			
