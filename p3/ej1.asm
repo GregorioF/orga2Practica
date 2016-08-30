@@ -3,6 +3,7 @@ global ComparacionGT
 global ComparacionEQ
 global ShiftWordRight
 global MultiplicarVectorPorPotenciaDeDos
+global FiltrarMayoresA
 
 %define sizeB_mmx, 16
 
@@ -82,34 +83,73 @@ ShiftWordRight:
 	ret
 
 ;void MultiplicarVectorPorPotenciaDeDos(int *vectorA, int potencia, int dimension)
+
 MultiplicarVectorPorPotenciaDeDos:
 ;rdi = puntero a vectorA
 ;rsi = potencia de dos a la que elevo
 ;rdx = cantidad de enteros del vector
+	
+	movq xmm2, rsi				; guardo en xmm2 la potencia a la que elevo 2
+	mov r8, 0				; va a ser mi current
+		
 	.ciclo:
 		cmp rdx, 4				; comparo la cantidad que me qda por shiftear con el tamaño del xmm0
 		jl .shiftManual			; si es menor a 4 me salto al modo manual
 		
 		.shiftEmpaquetado:
-			movdqu xmm0, [rdi]	; meuvo 4 numero int al xmm0
-			pslld xmm0, 2		; shifteo
-			movdqu [rdi], xmm0	; los reescribo
-			sub rdx, 4			; actualizo la cantidad que me falta
-			jmp .ciclo			; vuelvo al ciclo
-	
+			movdqu xmm0, [rdi+r8]	; muevo 4 numero int al xmm0
+			pslld xmm0, xmm2		; shifteo
+			movdqu [rdi+r8], xmm0	; los reescribo
+			sub rdx, 4				; actualizo la cantidad que me falta
+			add r8, 16		;actualizo mi current	 4 numeros * 4 bytes cada uyno
+			jmp .ciclo				; vuelvo al ciclo
+		
 	.shiftManual:					; si entre aca es porque la cantidad que me falta es < 4
 		cmp rdx, 0					; si termine de recorrer me voy
 		je .fin
 		
 		movd xmm0, [rdi]			; si no termine meuvo un solo numero a xmm0
-		pslld xmm0, 2			; lo shifteo
+		pslld xmm0, xmm2			; lo shifteo
+		movd [rdi], xmm0
 		sub rdx, 1					; actualizo los que me faltan
+		add r8, 1
 		jmp .shiftManual			; vuelvo a fijarme
 	
 	.fin:
 		ret
+		
+;extern void FiltrarMayoresA(short *vectorA, short umbral, int dimension);
+FiltrarMayoresA:
+; rdi = puntero a vectorA de shorts
+; si = numero cota
+; edx = dimension del arreglo
+	mov r8, 0				; va a ser mi current	
+	mov rcx, 8				; lo seteo para crea la mascara es el numero de shorts que entra en un xmm
+	.CreoMascara:
+		cmp rcx, 0			; si termine de hacer la mascara me voy
+		je .ciclo
+		
+		movd xmm1, esi		; meto en los primeros 16 bit de xmm1 s1
+		pslld xmm1, 16		; los corro 16 bits a  la izquierda
+		sub rcx, 1			; actualizo rcx
+		jmp .CreoMascara	; y vuelvo
+	
+	
+	.ciclo:
+		cmp rdx, 8			; me fjio si tengo  suficientes numeros para hacer la mascara simultanea
+		jl .filtrarManual
+		
+		.filtrarEmpaquetado:
+			movdqu xmm0, [rdi+r8]	; muevo  8 shorts a xmm0
+			pcmpgtw xmm0, xmm1	; hago la mascara inversa, si un numero de xmm0 es mayor a mi xmm1 se pone en ff 
+			movdqu [rdi+r8], xmm0	; lo vuevo a escribir en el vector
+			sub rdx, 8
+			lea r8, [r8+8*16]		;actualizo mi current
+			jmp .filtrarEmpaquetado
 			
 			
+		.filtrarManual:
+			ret
 			
 			
 			
