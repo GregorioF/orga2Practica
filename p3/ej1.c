@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define W 8
-#define X 8
+#define X 20
 #define Y 20
 
 extern void SumaVectores(char * vectorA, char* vectorB, char* vectorRes, int n);
@@ -82,10 +82,13 @@ int main(){
 	//ShiftWordRight(c,X);						//ANDA	
 	//imprimir16(c,X);
 
-	imprimir32(d,Y);
-	MultiplicarVectorPorPotenciaDeDos(d,2,Y);	//NO PARECE ANDAR...
-	imprimir32(d,Y);
+	//imprimir32(d,Y);
+	//MultiplicarVectorPorPotenciaDeDos(d,2,Y);	//ANDA
+	//imprimir32(d,Y);
 
+	imprimir16(c,X);
+	FiltrarMayoresA(c,3,X);
+	imprimir16(c,X);
 	
 	return 0;
 }

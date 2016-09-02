@@ -5,7 +5,8 @@ global ShiftWordRight
 global MultiplicarVectorPorPotenciaDeDos
 global FiltrarMayoresA
 
-%define sizeB_mmx, 16
+%define sizeB_mmx 16
+%define short_size 16
 
 section .text
 
@@ -124,13 +125,17 @@ FiltrarMayoresA:
 ; si = numero cota
 ; edx = dimension del arreglo
 	mov r8, 0				; va a ser mi current	
-	mov rcx, 8				; lo seteo para crea la mascara es el numero de shorts que entra en un xmm
+	mov rcx, 2				; lo seteo para crea la mascara es el numero de dwors que entra en un xmm
+	mov ax, si				; guardo en ax si
+	shl esi, short_size		; muevo si a la parte alta de esi
+	mov	si, ax				; pongo en la parte baja de esi denuevo si
+	
 	.CreoMascara:
 		cmp rcx, 0			; si termine de hacer la mascara me voy
 		je .ciclo
-		
-		movd xmm1, esi		; meto en los primeros 16 bit de xmm1 s1
-		pslld xmm1, 16		; los corro 16 bits a  la izquierda
+					
+		movd xmm1, esi		; meto en los primeros 32 bit de xmm1 si, si
+		psllq xmm1, 32		; los corro 32 bits a  la izquierda
 		sub rcx, 1			; actualizo rcx
 		jmp .CreoMascara	; y vuelvo
 	
@@ -152,15 +157,41 @@ FiltrarMayoresA:
 			ret
 			
 			
+
+;productoInternoFloats(float* a, float* b, short n)
+productoInternoFloats:
+;rdi puntero a vector A
+;rsi puntero a ector B
+;dx  = n
+
+	xor xmm0, xmm0
+	.ciclo:
+		cmp dx, 0 
+		je .segundaParte
+		movups xmm3, [rdi] 	; levanto algunos
+		movups xmm4, [rsi]	; levanto vector b
+		mulps xmm3, xmm4
+		addps xmm0, xmm3	; sumo las coas a xmm0
+		sub dx, 4
+		add rdi, 16
+		add rsi, 16
+		jmp .ciclo
+		
+	.segundaParte:
+		movups xmm1, xmm0	
+		psrldq xmm1, 8 ; esta en bytes porque shifteo todo el registro
+		addps xmm0, xmm1
+		movups xmm1, xmm0
+		
+		psrldq xmm1, 4
+		addss xmm0, xmm1
 			
 			
-			
-			
-			
-			
-			
-			
-			
+		ret	;............... terminar
+		
+		
+		
+
 			
 			
 			
