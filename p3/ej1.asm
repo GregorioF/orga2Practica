@@ -4,6 +4,7 @@ global ComparacionEQ
 global ShiftWordRight
 global MultiplicarVectorPorPotenciaDeDos
 global FiltrarMayoresA
+global maximaDistancia
 
 %define sizeB_mmx 16
 %define short_size 16
@@ -164,7 +165,7 @@ productoInternoFloats:
 ;rsi puntero a ector B
 ;dx  = n
 
-	xor xmm0, xmm0
+	;xor xmm0, xmm0
 	.ciclo:
 		cmp dx, 0 
 		je .segundaParte
@@ -188,6 +189,43 @@ productoInternoFloats:
 			
 			
 		ret	;............... terminar
+		
+
+;extern void maximaDistancia( float* v, float* w, unsinged short n);
+maximaDistancia:
+; rdi = puntero a primer vector de floats
+; rsi = puntero a segundo vector de floats
+; dx = tamaño de los vectores
+	xor r8, r8 ; va a ser mi current
+	pxor xmm0, xmm0
+	
+	.maxDistXmm:
+		cmp dx, 4
+		jl .maxDistXmm
+		jmp .maxManual
+	
+		movdqu xmm2, [rdi+r8]	; levanto datos de vector v
+		movdqu xmm1, [rsi+r8]	; levanto datos de vector w
+		subps xmm2, xmm1	; guardo la resta entre los x y x' y  y e y' en xmm2
+		mulps xmm2, xmm2	; tengo las restas al cuadrado
+		
+		movdqu xmm1, xmm2	; lo copio
+		psrldq xmm2, 4		; los corro a la izquierda un lugar
+		addps xmm1, xmm2	; TENGO  dos resultados en la pos 2 y en la pos 0 de xmm1
+		sqrtps xmm1, xmm1			; ahor ahago la raiz	y tengo todo en xmm1
+		maxps xmm0, xmm1	; dejo los maximos de las pos pares en lat ercer pos de xmm0, y el de las posisiones impares en la pos 0 de xmm0
+		add r8, 16
+		sub dx, 4
+		jmp .maxDistXmm
+		
+	.maxManual:
+			jmp .fin
+		
+	.fin:
+		movdqu xmm2, xmm0
+		psrldq xmm2, 8		; llevo el tercer flotante al primer lugar
+		maxss xmm0, xmm2	; tengo el maximo en xmm2 en lo primeros 4 bytes
+		ret
 		
 		
 		

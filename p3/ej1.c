@@ -13,6 +13,8 @@ extern void ComparacionEQ(char *vectorA, char *vectorB, int dimension );
 extern void ShiftWordRight (uint16_t* vectorA, int dimension);
 extern void MultiplicarVectorPorPotenciaDeDos(int *vectorA, int potencia, int dimension);
 extern void FiltrarMayoresA(short *vectorA, short umbral, int dimension);
+extern void maximaDistancia( float* v, float* w, ushort n);
+
 
 void SumaVectoresC(uint8_t* a , uint8_t* b , uint8_t* res , int n){
 	int i =0;
@@ -86,9 +88,12 @@ int main(){
 	//MultiplicarVectorPorPotenciaDeDos(d,2,Y);	//ANDA
 	//imprimir32(d,Y);
 
-	imprimir16(c,X);
-	FiltrarMayoresA(c,3,X);
-	imprimir16(c,X);
+	//imprimir16(c,X);
+	//FiltrarMayoresA(c,3,X);
+	//imprimir16(c,X);
+	
+	
+	
 	
 	return 0;
 }
